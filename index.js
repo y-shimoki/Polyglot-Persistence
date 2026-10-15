@@ -1,5 +1,10 @@
 import express from 'express';
 
 const app = express();
+app.set('view engine', 'ejs');
 
-app.listen(3000, () => console.log('Server executando na porta 3000'));
+app.get('/', (req, res) => {
+    res.render('test', { test: 'My test variable' });
+});
+
+app.listen(3000, () => console.log('Server executando em http://localhost:3000'));

@@ -1,22 +1,24 @@
 {
   "name": "polyglot",
   "version": "1.0.0",
+  "type": "module",
   "description": "Projeto de Node.js com persistência via 3 bancos de dados distintos.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/y-shimoki/Polyglot-Persistence.git"
   },
   "keywords": [],
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/y-shimoki/Polyglot-Persistence/issues"
   },
   "homepage": "https://github.com/y-shimoki/Polyglot-Persistence#readme",
   "dependencies": {
+    "ejs": "^7.0.1",
     "express": "^5.2.1",
     "ioredis": "^6.0.0",
     "mongoose": "^9.11.0",
