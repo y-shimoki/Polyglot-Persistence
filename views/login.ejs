@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Entrar - Bookstore</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body style="display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-color: #f8fafc;">
+
+  <div style="background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08); width: 100%; max-width: 440px; border: 1px solid #e2e8f0; box-sizing: border-box;">
+    
+    <!-- Cabeçalho do Card -->
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h1 style="color: #0f172a; font-size: 26px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: 1px;">📚 Bookstore</h1>
+      <p style="color: #64748b; font-size: 14px; margin: 0;">Acesse à sua conta ou crie um novo cadastro</p>
+    </div>
+
+    <!-- Secção de Login -->
+    <h3 style="font-size: 16px; color: #0f172a; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px;">Entrar na Plataforma</h3>
+    <form action="/login" method="POST" style="margin-bottom: 25px;">
+      <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Nome de utilizador</label>
+      <input type="text" name="nome" placeholder="Digite o seu utilizador" required style="width: 100%; padding: 11px 14px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; outline: none;">
+      
+      <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Senha</label>
+      <input type="password" name="senha" placeholder="Digite a sua senha" required style="width: 100%; padding: 11px 14px; margin-bottom: 16px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; outline: none;">
+      
+      <button type="submit" class="btn" style="width: 100%; background-color: #1e3a8a; padding: 12px; font-size: 15px; border-radius: 6px; font-weight: 600; cursor: pointer;">Entrar</button>
+    </form>
+
+    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
+
+    <!-- Secção de Registo -->
+    <h3 style="font-size: 16px; color: #0f172a; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px;">Criar Conta</h3>
+    <form action="/register" method="POST">
+      <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Escolha um nome</label>
+      <input type="text" name="nome" placeholder="Nome de utilizador único" required style="width: 100%; padding: 11px 14px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; outline: none;">
+      
+      <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Crie uma senha</label>
+      <input type="password" name="senha" placeholder="Crie uma senha segura" required style="width: 100%; padding: 11px 14px; margin-bottom: 16px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; outline: none;">
+      
+      <button type="submit" class="btn" style="width: 100%; background-color: #16a34a; padding: 12px; font-size: 15px; border-radius: 6px; font-weight: 600; cursor: pointer;">Registar</button>
+    </form>
+
+  </div>
+
+</body>
+</html>

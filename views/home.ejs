@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Livraria Online</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Header Superior Estilo E-commerce Profissional -->
+  <header class="store-header">
+    <div class="header-top">
+      <a href="/home" class="logo-text">📚 Bookstore</a>
+      
+      <div class="search-bar-container">
+        <input type="text" id="searchBar" placeholder="Pesquisar por título, autor ou género...">
+      </div>
+
+      <div class="header-actions">
+        <a href="/user">👤 Minha Conta</a>
+      </div>
+    </div>
+
+    <!-- Menu de Categorias Interativas -->
+    <nav class="nav-categories">
+      <a href="#" class="category-btn" data-category="todos">TODOS</a>
+      <a href="#" class="category-btn" data-category="fantasia">FANTASIA</a>
+      <a href="#" class="category-btn" data-category="distopia">DISTOPIA</a>
+      <a href="#" class="category-btn" data-category="ficção científica">FICÇÃO CIENTÍFICA</a>
+      <a href="#" class="category-btn" data-category="literatura brasileira">LITERATURA BRASILEIRA</a>
+      <a href="#" class="category-btn" data-category="infantil">INFANTIL</a>
+    </nav>
+  </header>
+
+  <!-- Container Principal -->
+  <div class="main-container" style="margin-top: 30px;">
+    <div class="section-title">Títulos Selecionados</div>
+
+    <!-- Grid de Livros com Imagens de Capa -->
+    <div class="book-grid" id="bookGrid">
+      <% if (typeof livros !== 'undefined' && livros.length > 0) { %>
+        <% livros.forEach(livro => { %>
+          <div class="book-card" data-title="<%= livro.titulo.toLowerCase() %>" data-author="<%= livro.autor.toLowerCase() %>" data-genre="<%= livro.generos.toLowerCase() %>">
+            <div>
+              <!-- Imagem da Capa do Livro no Topo -->
+              <div style="width: 100%; height: 200px; background: #e2e8f0; border-radius: 6px; overflow: hidden; margin-bottom: 15px; display: flex; align-items: center; justify-content: center;">
+                <img src="<%= livro.capa %>" alt="<%= livro.titulo %>" style="width: 100%; height: 100%; object-fit: cover;">
+              </div>
+
+              <span class="book-genre"><%= livro.generos %></span>
+              <h3 style="margin: 5px 0 10px 0; font-size: 17px; color: var(--text-main);"><%= livro.titulo %></h3>
+              <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 8px 0;"><strong>Autor(a):</strong> <%= livro.autor %></p>
+              <div class="book-price">R$ <%= livro.preco %></div>
+              <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 8px;"><%= livro.sinopse %></p>
+            </div>
+            <div style="margin-top: 15px;">
+              <a href="/book/<%= encodeURIComponent(livro.titulo) %>" class="btn">Ver Detalhes</a>
+            </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <p>Nenhum livro cadastrado no catálogo.</p>
+      <% } %>
+    </div>
+
+    <!-- Mensagem de Sem Resultados -->
+    <div id="noResults" style="display: none; text-align: center; padding: 40px; background: white; border-radius: 12px; border: 1px solid var(--border); margin-top: 20px;">
+      <p style="font-size: 18px; font-weight: 600; color: var(--text-main); margin: 0 0 5px 0;">Nenhum livro encontrado</p>
+      <p style="font-size: 14px; color: var(--text-muted); margin: 0;">Tente pesquisar por outro termo ou categoria.</p>
+    </div>
+  </div>
+
+  <!-- Script de Filtro Instantâneo -->
+  <script>
+    const searchBar = document.getElementById('searchBar');
+    const bookCards = document.querySelectorAll('.book-card');
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    const noResultsDiv = document.getElementById('noResults');
+
+    function filterBooks(term) {
+      let visibleCount = 0;
+
+      bookCards.forEach(card => {
+        const title = card.getAttribute('data-title');
+        const author = card.getAttribute('data-author');
+        const genre = card.getAttribute('data-genre');
+
+        if (term === 'todos' || term === '' || genre.includes(term) || title.includes(term) || author.includes(term)) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      noResultsDiv.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+
+    searchBar.addEventListener('keyup', (e) => {
+      filterBooks(e.target.value.toLowerCase().trim());
+    });
+
+    categoryBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const category = btn.getAttribute('data-category');
+        searchBar.value = '';
+        filterBooks(category);
+      });
+    });
+  </script>
+
+</body>
+</html>
