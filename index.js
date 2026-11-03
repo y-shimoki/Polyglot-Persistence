@@ -1,4 +1,7 @@
 import express from 'express';
+import 'dotenv/config';
+import * as MongoDB from './src/mongodb.js';
+import * as Postgre from './src/postgre.js';
 
 const app = express();
 
@@ -7,126 +10,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
-// Base de dados simulada para testes do front-end
-let livros = [
-    { 
-        id: 1, 
-        titulo: 'Harry Potter e a Pedra Filosofal', 
-        autor: 'J.K. Rowling', 
-        generos: 'Fantasia', 
-        preco: '49.90', 
-        sinopse: 'Um jovem bruxo descobre um mundo mágico em Hogwarts.', 
-        capa: '/imagens/harrypotter.jpg' 
-    },
-    { 
-        id: 2, 
-        titulo: 'Jogos Vorazes', 
-        autor: 'Suzanne Collins', 
-        generos: 'Distopia', 
-        preco: '39.90', 
-        sinopse: 'Sobrevivência num reality show mortal.', 
-        capa: '/imagens/jogosvorazes.jpg' 
-    },
-    { 
-        id: 3, 
-        titulo: 'O Senhor dos Anéis: A Sociedade do Anel', 
-        autor: 'J.R.R. Tolkien', 
-        generos: 'Fantasia / Aventura', 
-        preco: '69.90', 
-        sinopse: 'A jornada épica para destruir o anel mágico.', 
-        capa: '/imagens/senhordosaneis.jpg' 
-    },
-    { 
-        id: 4, 
-        titulo: '1984', 
-        autor: 'George Orwell', 
-        generos: 'Ficção Científica / Clássico', 
-        preco: '34.90', 
-        sinopse: 'Sociedade totalitária sob vigilância constante.', 
-        capa: '/imagens/1984.jpg' 
-    },
-    { 
-        id: 5, 
-        titulo: 'Dom Casmurro', 
-        autor: 'Machado de Assis', 
-        generos: 'Literatura Brasileira', 
-        preco: '29.90', 
-        sinopse: 'A clássica dúvida sobre a traição de Capitu.', 
-        capa: '/imagens/domcasmurro.jpg' 
-    },
-    { 
-        id: 6, 
-        titulo: 'O Pequeno Príncipe', 
-        autor: 'Antoine de Saint-Exupéry', 
-        generos: 'Infantil', 
-        preco: '24.90', 
-        sinopse: 'As reflexões de um pequeno príncipe pelos planetas.', 
-        capa: '/imagens/pequenoprincipe.jpg' 
-    },
-    { 
-        id: 7, 
-        titulo: 'O Hobbit', 
-        autor: 'J.R.R. Tolkien', 
-        generos: 'Fantasia', 
-        preco: '45.90', 
-        sinopse: 'As aventuras de Bilbo Bolseiro rumo à Montanha Solitária.', 
-        capa: '/imagens/hobbit.jpg' 
-    },
-    { 
-        id: 8, 
-        titulo: 'Fahrenheit 451', 
-        autor: 'Ray Bradbury', 
-        generos: 'Distopia / Ficção Científica', 
-        preco: '37.90', 
-        sinopse: 'Um mundo onde os livros são proibidos e queimados.', 
-        capa: '/imagens/fahrenheit.jpg' 
-    },
-    { 
-        id: 9, 
-        titulo: 'Memórias Póstumas de Brás Cubas', 
-        autor: 'Machado de Assis', 
-        generos: 'Literatura Brasileira', 
-        preco: '32.90', 
-        sinopse: 'A narrativa irônica de um defunto autor.', 
-        capa: '/imagens/brascubas.jpg' 
-    },
-    { 
-        id: 10, 
-        titulo: 'Percy Jackson e o Ladrão de Raios', 
-        autor: 'Rick Riordan', 
-        generos: 'Fantasia / Infantil', 
-        preco: '42.90', 
-        sinopse: 'Um jovem descobre que é filho de Poseidon.', 
-        capa: '/imagens/percyjackson.jpg' 
-    },
-    { 
-        id: 11, 
-        titulo: 'Duna', 
-        autor: 'Frank Herbert', 
-        generos: 'Ficção Científica', 
-        preco: '59.90', 
-        sinopse: 'Disputa política e religiosa pelo planeta árido Arrakis.', 
-        capa: '/imagens/duna.jpg' 
-    },
-    { 
-        id: 12, 
-        titulo: 'O Alquimista', 
-        autor: 'Paulo Coelho', 
-        generos: 'Literatura Brasileira', 
-        preco: '39.90', 
-        sinopse: 'A jornada de um pastor andaluz em busca de tesouro.', 
-        capa: '/imagens/alquimista.jpg' 
-    }
-];
+await MongoDB.connectToMongoDB();
+await Postgre.connectToPostgreSQL();
 
 let usuario = {
-    nome: 'Erik',
-    saldo: 150.00,
-    livrosComprados: [],
-    reviews: []
+    user: 'oi123',
+    senha: 'oi123'
 };
-
-let reviews = [];
 
 // ================= ROTAS GET (PÁGINAS) =================
 
@@ -136,104 +26,219 @@ app.get('/', (req, res) => {
 });
 
 // Página 2: Home (Catálogo)
-app.get('/home', (req, res) => {
-    const isAdmin = usuario.nome.toLowerCase() === 'admin';
+app.get('/home', async (req, res) => {
+    try {
+        
+        // ...
 
-    res.render('home', { 
-        livros, // Envia a lista completa de livros
-        usuario, 
-        isAdmin 
-    });
+        const livros = await MongoDB.getLivros();
+    
+        const isAdmin = usuario.user.toLowerCase() === 'admin';
+
+        res.render('home', { 
+            livros,
+            usuario, 
+            isAdmin 
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao carregar livros.');
+    }
 });
+
 // Página 3: Perfil do Usuário / Admin
-app.get('/user', (req, res) => {
-    const isAdmin = usuario.nome.toLowerCase() === 'admin';
-    res.render('user', { usuario, isAdmin, reviews });
+app.get('/user', async (req, res) => {
+    try {
+
+        // ...
+
+
+        // consulta a tabela "Usuario_Livro" no Postgre e retorna os ids dos livros que o usuário possui:
+        const idLivros = await Postgre.getLivrosDoUsuario(usuario.user);
+
+        // para cada id encontrado, procura o id no MongoDB e retorna o livro correspondente: 
+        const livros = await Promise.all(
+            idLivros.map(livro => MongoDB.getLivroPorId(livro.bookId))
+        );
+
+        const reviews = await MongoDB.getReviewsDoUsuario(usuario.user);
+
+        // para cada review encontrada (coleção "Reviews"), busca o id do livro correspondente na coleção "Livros" (para pegar o título): 
+        const reviewsComTitulo = await Promise.all(
+            reviews.map(async (rev) => {
+                const livro = await MongoDB.getLivroPorId(rev.bookId); 
+
+                return {
+                    ...rev.toObject(),  // mantém os dados originais da review, adicionando o título do livro, se existir;
+                    tituloLivro: livro ? livro.titulo : 'Livro não existe mais.'
+                };
+            })
+        );
+
+        const isAdmin = usuario.user.toLowerCase() === 'admin';
+
+        res.render('user', {
+            usuario,
+            isAdmin,
+            reviews: reviewsComTitulo,  // envia a variável 'reviewsComTitulo' com o nome 'reviews' para o ejs;
+            livros
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao carregar perfil.');
+    }
 });
 
 // Página 4: Detalhes do Livro
-app.get('/book/:name', (req, res) => {
-    const bookName = req.params.name;
-    
-    // Busca o livro pelo título
-    const livroEncontrado = livros.find(l => l.titulo.toLowerCase() === bookName.toLowerCase()) || {
-        id: 99,
-        titulo: bookName,
-        autor: 'Autor Exemplo',
-        generos: 'Aventura',
-        preco: '49.90',
-        sinopse: 'Esta é a sinopse detalhada do livro selecionado.'
-    };
-    
-    // Filtra as reviews deste livro
-    const reviewsDoLivro = reviews.filter(r => r.livro.toLowerCase() === bookName.toLowerCase());
+app.get('/book/:id', async (req, res) => {
+    try {
+        const bookId = req.params.id;
 
-    res.render('book', { livro: livroEncontrado, reviews: reviewsDoLivro });
-  
+        const livro = await MongoDB.getLivroPorId(bookId);
+
+        if (!livro) {
+            return res.status(404).send('Livro não encontrado.');
+        }
+
+        const reviewsDoLivro = await MongoDB.getReviewsDoLivro(bookId);
+
+        const reviewUsuario = await MongoDB.verificarReview(usuario.user, bookId);  // verifica se o usuário ativo já avaliou esse livro;
+
+        res.render('book', {
+            livro: livro,
+            reviews: reviewsDoLivro,
+            reviewUsuario
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao carregar detalhes do livro.');
+    }
 });
+
 // Ação: Terminar Sessão (Logout)
 app.get('/logout', (req, res) => {
-    // Redefine ou limpa os dados do utilizador atual se necessário
-    usuario.nome = '';
+    // ...
+
     res.redirect('/');
 });
-
 
 // ================= ROTAS POST (AÇÕES) =================
 
 // Ação: Entrar (Login)
-app.post('/login', (req, res) => {
-    const { nome } = req.body;
-    if (nome) usuario.nome = nome;
-    res.redirect('/home');
+app.post('/login', async (req, res) => {
+    try {
+        const { nome, senha } = req.body;
+
+        const usuario = await Postgre.getUsuario(nome);
+
+        if (!usuario || usuario.senha !== senha) {
+            return res.send('Usuário ou senha incorretos.');
+        }
+
+        res.redirect('/home');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao realizar login.');
+    }
 });
 
 // Ação: Criar Conta (Register)
-app.post('/register', (req, res) => {
-    const { nome } = req.body;
-    if (nome) usuario.nome = nome;
-    res.redirect('/home');
+app.post('/register', async (req, res) => {
+    try {
+        const { nome, senha } = req.body;
+
+        const usuarioExistente = await Postgre.getUsuario(nome);  // busca um usuário com o mesmo user no banco;
+
+        if (usuarioExistente) {
+            return res.send('Nome de usuário já existe.');  // se encontrar, impede o cadastro;
+        }
+
+        await Postgre.cadastrarUsuario(nome, senha);
+
+        res.redirect('/');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao realizar cadastro');
+    }
 });
 
 // Ação: Comprar Livro
-app.post('/buy/:name', (req, res) => {
-    const bookName = req.params.name;
-    if (!usuario.livrosComprados.includes(bookName)) {
-        usuario.livrosComprados.push(bookName);
+app.post('/buy/:id', async (req, res) => {
+   try {
+        // ...
+
+        const bookId = req.params.id;
+
+        const jaPossui = await Postgre.verificarPosse(usuario.user, bookId);
+
+        if (jaPossui) {
+            res.send('Você já possui esse livro na conta!')
+        } else {
+            await Postgre.adicionarLivro(usuario.user, bookId);
+            console.log("Operação concluída");
+            res.redirect('/user');  // Redireciona para o perfil para ver o livro comprado
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao comprar livro.');
     }
-    res.redirect('/user'); // Redireciona para o perfil para ver o livro comprado
 });
 
 // Ação: Enviar Review
-app.post('/review/:name', (req, res) => {
-    const bookName = req.params.name;
-    const { nota, texto } = req.body;
+app.post('/review/:id', async (req, res) => {
+    try {
+        // ...
 
-    const novaReview = {
-        usuario: usuario.nome,
-        livro: bookName,
-        nota: nota || 5,
-        texto: texto || ''
-    };
+        const bookId = req.params.id;
+        const { nota, texto } = req.body;
 
-    reviews.push(novaReview);
-    usuario.reviews.push(novaReview);
+        const reviewExistente = await MongoDB.verificarReview(usuario.user, bookId);  // checa se o usuário já avaliou esse livro;
 
-    res.redirect(`/book/${encodeURIComponent(bookName)}`);
+        const dadosReview = {
+            nota: Number(nota) || 5,
+            comentario: texto || ''
+        };
+
+        if (reviewExistente) {  // se já avaliou atualiza a review antiga;
+            await MongoDB.updateReview(usuario.user, bookId, dadosReview);
+        } else {  // se não adiciona uma nova review;
+            const novaReview = {
+                bookId: bookId,
+                user: usuario.user,
+                ...dadosReview
+            };
+            await MongoDB.addReview(novaReview);
+        }
+
+        res.redirect(`/book/${bookId}`);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao enviar review.');
+    }
 });
 
 // Ação Admin: Adicionar Novo Livro
-app.post('/admin/add-book', (req, res) => {
-    const { titulo, sinopse, generos, autor, preco } = req.body;
-    livros.push({
-        id: Date.now(),
-        titulo,
-        sinopse,
-        generos,
-        autor,
-        preco
-    });
-    res.redirect('/home');
+app.post('/admin/add-book', async (req, res) => {
+    try {
+        const { titulo, sinopse, genero, autor, preco, capa } = req.body;
+
+        await MongoDB.adicionarLivro({
+            titulo,
+            sinopse,
+            genero,
+            autor,
+            preco,
+            capa
+        });
+
+        res.redirect('/home');
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao cadastrar livro');
+    }
 });
 
 // Iniciar Servidor na Porta 3000

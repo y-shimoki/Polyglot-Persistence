@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/y-shimoki/Polyglot-Persistence#readme",
   "dependencies": {
+    "dotenv": "^18.0.9",
     "ejs": "^7.0.1",
     "express": "^5.2.1",
     "ioredis": "^6.0.0",

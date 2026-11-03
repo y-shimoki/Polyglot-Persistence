@@ -26,7 +26,7 @@
       <h1 style="margin: 5px 0 15px 0; color: var(--text-main); font-size: 28px;"><%= livro.titulo %></h1>
       
       <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 8px;"><strong>Autor(a):</strong> <%= livro.autor %></p>
-      <div class="book-price" style="font-size: 24px; margin: 15px 0;">R$ <%= livro.preco %></div>
+      <div class="book-price" style="font-size: 24px; margin: 15px 0;">R$ <%= Number(livro.preco).toFixed(2) %></div>
       
       <div style="margin: 20px 0; padding-top: 15px; border-top: 1px solid #f1f5f9;">
         <h3 style="font-size: 16px; color: var(--text-main); margin-bottom: 8px;">Sinopse</h3>
@@ -34,7 +34,7 @@
       </div>
 
       <!-- Formulário de Compra -->
-      <form action="/buy/<%= livro.titulo %>" method="POST" style="margin-top: 25px;">
+      <form action="/buy/<%= livro._id %>" method="POST" style="margin-top: 25px;">
         <button type="submit" class="btn" style="background-color: #16a34a; font-size: 16px; padding: 12px 24px; width: fit-content;">🛒 Comprar Livro</button>
       </form>
     </div>
@@ -48,10 +48,10 @@
           <% reviews.forEach(review => { %>
             <div style="background: #f8fafc; padding: 15px; margin-bottom: 12px; border-radius: 8px; border-left: 4px solid var(--accent-blue);">
               <p style="margin: 0 0 6px 0; font-size: 14px;">
-                <strong><%= review.usuario %></strong> — Nota: <%= review.nota %> ⭐
+                <strong><%= review.user %></strong> — Nota: <%= review.nota %> ⭐
               </p>
-              <% if (review.texto) { %>
-                <p style="margin: 0; color: var(--text-muted); font-size: 13px;"><%= review.texto %></p>
+              <% if (review.comentario) { %>
+                <p style="margin: 0; color: var(--text-muted); font-size: 13px;"><%= review.comentario %></p>
               <% } %>
             </div>
           <% }) %>
@@ -65,15 +65,17 @@
       <!-- Formulário para Enviar Review -->
       <h4 style="font-size: 18px; color: var(--text-main); margin-bottom: 15px;">Deixe a sua review</h4>
       
-      <form action="/review/<%= livro.titulo %>" method="POST" style="display: flex; flex-direction: column; gap: 15px; max-width: 100%;">
+      <form action="/review/<%= livro._id %>" method="POST" style="display: flex; flex-direction: column; gap: 15px; max-width: 100%;">
         <div>
           <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #475569;">Nota (1 a 5 estrelas):</label>
-          <input type="number" name="nota" min="1" max="5" value="5" required style="width: 120px; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;">
+          <input type="number" name="nota" min="1" max="5" value="<%= reviewUsuario ? reviewUsuario.nota : 5 %>" required style="width: 120px; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;">
         </div>
 
         <div>
           <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #475569;">Comentário:</label>
-          <textarea name="texto" placeholder="Escreva sua opinião sobre o livro..." rows="4" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--border); box-sizing: border-box; font-family: inherit; font-size: 14px;"></textarea>
+          <textarea name="texto" placeholder="Escreva sua opinião sobre o livro..." rows="4" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--border); box-sizing: border-box; font-family: inherit; font-size: 14px;">
+          <%= reviewUsuario ? reviewUsuario.comentario : '' %>
+          </textarea>
         </div>
 
         <button type="submit" class="btn" style="width: fit-content; padding: 12px 25px;">Enviar Review</button>

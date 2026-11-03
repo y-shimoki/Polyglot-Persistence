@@ -25,10 +25,10 @@
       <div style="display: flex; align-items: center; gap: 20px;">
         <!-- Avatar com a inicial do utilizador -->
         <div style="width: 65px; height: 65px; background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold; text-transform: uppercase; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2);">
-          <%= usuario.nome.charAt(0) %>
+          <%= usuario.user.charAt(0) %>
         </div>
         <div>
-          <h1 style="font-size: 24px; font-weight: 800; color: var(--text-main); margin: 0 0 5px 0;">Olá, <%= usuario.nome %>! </h1>
+          <h1 style="font-size: 24px; font-weight: 800; color: var(--text-main); margin: 0 0 5px 0;">Olá, <%= usuario.user %>! </h1>
           <p style="color: var(--text-muted); font-size: 14px; margin: 0;">Membro ativo da nossa comunidade literária.</p>
         </div>
       </div>
@@ -55,7 +55,7 @@
           <div style="display: flex; gap: 15px;">
             <div style="flex: 1;">
               <label style="font-size: 13px; font-weight: 600; color: #475569;">Gêneros:</label>
-              <input type="text" name="generos" required style="margin-top: 4px;">
+              <input type="text" name="genero" required style="margin-top: 4px;">
             </div>
             <div style="flex: 1;">
               <label style="font-size: 13px; font-weight: 600; color: #475569;">Preço (R$):</label>
@@ -79,21 +79,21 @@
       </div>
       <div style="background: white; padding: 22px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); border: 1px solid var(--border); border-left: 5px solid #8b5cf6;">
         <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 5px 0; font-weight: 600; text-transform: uppercase;">Livros na Biblioteca</p>
-        <p style="font-size: 24px; font-weight: 800; color: var(--text-main); margin: 0;"><%= usuario.livrosComprados ? usuario.livrosComprados.length : 0 %></p>
+        <p style="font-size: 24px; font-weight: 800; color: var(--text-main); margin: 0;"><%= livros ? livros.length : 0 %></p>
       </div>
       <div style="background: white; padding: 22px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); border: 1px solid var(--border); border-left: 5px solid #f59e0b;">
         <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 5px 0; font-weight: 600; text-transform: uppercase;">Avaliações Feitas</p>
-        <p style="font-size: 24px; font-weight: 800; color: var(--text-main); margin: 0;"><%= usuario.reviews ? usuario.reviews.length : 0 %></p>
+        <p style="font-size: 24px; font-weight: 800; color: var(--text-main); margin: 0;"><%= reviews ? reviews.length : 0 %></p>
       </div>
     </div>
 
     <!-- Livros Comprados -->
     <div style="background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); border: 1px solid var(--border); margin-bottom: 25px;">
       <h3 style="font-size: 18px; color: var(--text-main); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">📚 Meus Livros Comprados</h3>
-      <% if (typeof usuario.livrosComprados !== 'undefined' && usuario.livrosComprados.length > 0) { %>
+      <% if (typeof livros !== 'undefined' && livros.length > 0) { %>
         <ul style="margin: 0; padding-left: 20px;">
-          <% usuario.livrosComprados.forEach(livro => { %>
-            <li style="padding: 8px 0; font-weight: 500; color: var(--text-main); font-size: 15px;"><%= livro %></li>
+          <% livros.forEach(livro => { %>
+            <li style="padding: 8px 0; font-weight: 500; color: var(--text-main); font-size: 15px;"><%= livro.titulo %></li>
           <% }) %>
         </ul>
       <% } else { %>
@@ -107,16 +107,16 @@
     <!-- Minhas Reviews -->
     <div style="background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); border: 1px solid var(--border);">
       <h3 style="font-size: 18px; color: var(--text-main); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">⭐ Minhas Avaliações</h3>
-      <% if (typeof usuario.reviews !== 'undefined' && usuario.reviews.length > 0) { %>
-        <% usuario.reviews.forEach(rev => { %>
+      <% if (typeof reviews !== 'undefined' && reviews.length > 0) { %>
+        <% reviews.forEach(rev => { %>
           <div style="background: #f8fafc; padding: 15px; margin-bottom: 12px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-            <p style="margin: 0 0 6px 0; font-size: 14px;"><strong>Livro:</strong> <%= rev.livro %> | <strong>Nota:</strong> <%= rev.nota %> ⭐</p>
-            <p style="margin: 0; color: var(--text-muted); font-size: 13px;"><%= rev.texto %></p>
+            <p style="margin: 0 0 6px 0; font-size: 14px;"><strong>Livro:</strong> <%= rev.tituloLivro %> | <strong>Nota:</strong> <%= rev.nota %> ⭐</p>
+            <p style="margin: 0; color: var(--text-muted); font-size: 13px;"><%= rev.comentario %></p>
           </div>
         <% }) %>
       <% } else { %>
         <div style="text-align: center; padding: 20px; color: var(--text-muted);">
-          <p style="font-style: italic; margin: 0;">Você ainda não fez nenhuma avaliação. Partilhe a sua opinião sobre os livros lidos!</p>
+          <p style="font-style: italic; margin: 0;">Você ainda não fez nenhuma avaliação.</p>
         </div>
       <% } %>
     </div>
