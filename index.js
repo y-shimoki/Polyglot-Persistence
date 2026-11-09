@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
 app.get('/home', async (req, res) => {
     try {
         
-        // ...
+        const usuario = req.session.usuario;
 
         const livros = await MongoDB.getLivros();
     
@@ -56,9 +56,7 @@ app.get('/home', async (req, res) => {
 // Página 3: Perfil do Usuário / Admin
 app.get('/user', async (req, res) => {
     try {
-
-        // ...
-
+        const usuario = req.session.usuario;
 
         // consulta a tabela "Usuario_Livro" no Postgre e retorna os ids dos livros que o usuário possui:
         const idLivros = await Postgre.getLivrosDoUsuario(usuario.user);
@@ -100,6 +98,8 @@ app.get('/user', async (req, res) => {
 // Página 4: Detalhes do Livro
 app.get('/book/:id', async (req, res) => {
     try {
+	const usuario = req.session.usuario;
+
         const bookId = req.params.id;
 
         const livro = await MongoDB.getLivroPorId(bookId);
@@ -144,6 +144,11 @@ app.post('/login', async (req, res) => {
             return res.send('Usuário ou senha incorretos.');
         }
 
+	req.session.usuario = {
+		user: nome,
+		senha
+	};
+
         res.redirect('/home');
     } catch (err) {
         console.error(err);
@@ -174,7 +179,7 @@ app.post('/register', async (req, res) => {
 // Ação: Comprar Livro
 app.post('/buy/:id', async (req, res) => {
    try {
-        // ...
+        const usuario = req.session.usuario;
 
         const bookId = req.params.id;
 
@@ -196,7 +201,7 @@ app.post('/buy/:id', async (req, res) => {
 // Ação: Enviar Review
 app.post('/review/:id', async (req, res) => {
     try {
-        // ...
+        const usuario = req.session.usuario;
 
         const bookId = req.params.id;
         const { nota, texto } = req.body;
