@@ -20,11 +20,6 @@ app.use(session({
 await MongoDB.connectToMongoDB();
 await Postgre.connectToPostgreSQL();
 
-let usuario = {
-    user: 'oi123',
-    senha: 'oi123'
-};
-
 // ================= ROTAS GET (PÁGINAS) =================
 
 // Página 1: Login / Cadastro
