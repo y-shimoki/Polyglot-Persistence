@@ -2,12 +2,12 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Livraria Online</title>
+  <title>Bookstore</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
-  <!-- Header Superior Estilo E-commerce Profissional -->
+  <!-- Header Superior -->
   <header class="store-header">
     <div class="header-top">
       <a href="/home" class="logo-text">📚 Bookstore</a>
@@ -17,6 +17,9 @@
       </div>
 
       <div class="header-actions">
+        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+          <a href="/admin" style="background: #e2e8f0; padding: 6px 12px; border-radius: 6px; font-weight: 600; color: #1e293b; text-decoration: none;">⚙️ Painel Admin</a>
+        <% } %>
         <a href="/user">👤 Minha Conta</a>
       </div>
     </div>
@@ -36,25 +39,19 @@
   <div class="main-container" style="margin-top: 30px;">
     <div class="section-title">Títulos Selecionados</div>
 
-    <!-- Grid de Livros com Imagens de Capa -->
+    <!-- Grid de Livros (Sem Imagens e Sem Preços) -->
     <div class="book-grid" id="bookGrid">
       <% if (typeof livros !== 'undefined' && livros.length > 0) { %>
         <% livros.forEach(livro => { %>
-          <div class="book-card" data-title="<%= livro.titulo.toLowerCase() %>" data-author="<%= livro.autor.toLowerCase() %>" data-genre="<%= livro.genero.join(' / ').toLowerCase() %>">
+          <div class="book-card" data-title="<%= livro.titulo.toLowerCase() %>" data-author="<%= livro.autor.toLowerCase() %>" data-genre="<%= livro.generos ? livro.generos.toLowerCase() : '' %>">
             <div>
-              <!-- Imagem da Capa do Livro no Topo -->
-              <div style="width: 100%; height: 200px; background: #e2e8f0; border-radius: 6px; overflow: hidden; margin-bottom: 15px; display: flex; align-items: center; justify-content: center;">
-                <img src="<%= livro.capa %>" alt="<%= livro.titulo %>" style="width: 100%; height: 100%; object-fit: cover;">
-              </div>
-
-              <span class="book-genre"><%= livro.genero.join(' / ') %></span>
+              <span class="book-genre"><%= livro.generos %></span>
               <h3 style="margin: 5px 0 10px 0; font-size: 17px; color: var(--text-main);"><%= livro.titulo %></h3>
               <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 8px 0;"><strong>Autor(a):</strong> <%= livro.autor %></p>
-              <div class="book-price">R$ <%= Number(livro.preco).toFixed(2) %></div>
               <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 8px;"><%= livro.sinopse %></p>
             </div>
             <div style="margin-top: 15px;">
-              <a href="/book/<%= livro._id %>" class="btn">Ver Detalhes</a>
+              <a href="/book/<%= livro._id %>" class="btn" style="display: block; text-align: center;">Ver Detalhes</a>
             </div>
           </div>
         <% }) %>

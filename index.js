@@ -11,10 +11,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false }
+    secret: 'minha_chave_secreta_super_segura',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
 }));
 
 await MongoDB.connectToMongoDB();
@@ -30,11 +30,10 @@ app.get('/', (req, res) => {
 // Página 2: Home (Catálogo)
 app.get('/home', async (req, res) => {
     try {
-        
         const usuario = req.session.usuario;
+        if (!usuario) return res.redirect('/');
 
         const livros = await MongoDB.getLivros();
-    
         const isAdmin = usuario.user.toLowerCase() === 'admin';
 
         res.render('home', { 
@@ -48,28 +47,42 @@ app.get('/home', async (req, res) => {
     }
 });
 
-// Página 3: Perfil do Usuário / Admin
+// Página do Painel do Administrador (Nova rota para facilitar o acesso do professor)
+app.get('/admin', async (req, res) => {
+    try {
+        const usuario = req.session.usuario;
+        if (!usuario || usuario.user.toLowerCase() !== 'admin') {
+            return res.status(403).send('Acesso negado.');
+        }
+
+        const livros = await MongoDB.getLivros();
+        res.render('admin', { livros, usuario }); // Certifique-se de ter uma view 'admin.ejs' se necessário
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao carregar painel do admin.');
+    }
+});
+
+// Página 3: Perfil do Usuário / Favoritos e Reviews
 app.get('/user', async (req, res) => {
     try {
         const usuario = req.session.usuario;
+        if (!usuario) return res.redirect('/');
 
-        // consulta a tabela "Usuario_Livro" no Postgre e retorna os ids dos livros que o usuário possui:
+        // Retorna os IDs dos livros favoritados pelo usuário
         const idLivros = await Postgre.getLivrosDoUsuario(usuario.user);
 
-        // para cada id encontrado, procura o id no MongoDB e retorna o livro correspondente: 
         const livros = await Promise.all(
             idLivros.map(livro => MongoDB.getLivroPorId(livro.bookId))
         );
 
         const reviews = await MongoDB.getReviewsDoUsuario(usuario.user);
 
-        // para cada review encontrada (coleção "Reviews"), busca o id do livro correspondente na coleção "Livros" (para pegar o título): 
         const reviewsComTitulo = await Promise.all(
             reviews.map(async (rev) => {
                 const livro = await MongoDB.getLivroPorId(rev.bookId); 
-
                 return {
-                    ...rev.toObject(),  // mantém os dados originais da review, adicionando o título do livro, se existir;
+                    ...rev.toObject(),
                     tituloLivro: livro ? livro.titulo : 'Livro não existe mais.'
                 };
             })
@@ -80,7 +93,7 @@ app.get('/user', async (req, res) => {
         res.render('user', {
             usuario,
             isAdmin,
-            reviews: reviewsComTitulo,  // envia a variável 'reviewsComTitulo' com o nome 'reviews' para o ejs;
+            reviews: reviewsComTitulo,
             livros
         });
 
@@ -93,10 +106,10 @@ app.get('/user', async (req, res) => {
 // Página 4: Detalhes do Livro
 app.get('/book/:id', async (req, res) => {
     try {
-	const usuario = req.session.usuario;
+        const usuario = req.session.usuario;
+        if (!usuario) return res.redirect('/');
 
         const bookId = req.params.id;
-
         const livro = await MongoDB.getLivroPorId(bookId);
 
         if (!livro) {
@@ -104,8 +117,7 @@ app.get('/book/:id', async (req, res) => {
         }
 
         const reviewsDoLivro = await MongoDB.getReviewsDoLivro(bookId);
-
-        const reviewUsuario = await MongoDB.verificarReview(usuario.user, bookId);  // verifica se o usuário ativo já avaliou esse livro;
+        const reviewUsuario = await MongoDB.verificarReview(usuario.user, bookId);
 
         res.render('book', {
             livro: livro,
@@ -121,9 +133,9 @@ app.get('/book/:id', async (req, res) => {
 
 // Ação: Terminar Sessão (Logout)
 app.get('/logout', (req, res) => {
-    // ...
-
-    res.redirect('/');
+    req.session.destroy(() => {
+        res.redirect('/');
+    });
 });
 
 // ================= ROTAS POST (AÇÕES) =================
@@ -132,18 +144,13 @@ app.get('/logout', (req, res) => {
 app.post('/login', async (req, res) => {
     try {
         const { nome, senha } = req.body;
-
         const usuario = await Postgre.getUsuario(nome);
 
         if (!usuario || usuario.senha !== senha) {
             return res.send('Usuário ou senha incorretos.');
         }
 
-	req.session.usuario = {
-		user: nome,
-		senha
-	};
-
+        req.session.usuario = { user: nome, senha };
         res.redirect('/home');
     } catch (err) {
         console.error(err);
@@ -155,15 +162,13 @@ app.post('/login', async (req, res) => {
 app.post('/register', async (req, res) => {
     try {
         const { nome, senha } = req.body;
-
-        const usuarioExistente = await Postgre.getUsuario(nome);  // busca um usuário com o mesmo user no banco;
+        const usuarioExistente = await Postgre.getUsuario(nome);
 
         if (usuarioExistente) {
-            return res.send('Nome de usuário já existe.');  // se encontrar, impede o cadastro;
+            return res.send('Nome de usuário já existe.');
         }
 
         await Postgre.cadastrarUsuario(nome, senha);
-
         res.redirect('/');
     } catch (err) {
         console.error(err);
@@ -171,46 +176,43 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// Ação: Comprar Livro
-app.post('/buy/:id', async (req, res) => {
+// Ação: Favoritar Livro (Antiga rota de compra, agora adaptada para favoritos sem dinheiro)
+app.post('/favorite/:id', async (req, res) => {
    try {
         const usuario = req.session.usuario;
-
         const bookId = req.params.id;
 
-        const jaPossui = await Postgre.verificarPosse(usuario.user, bookId);
+        const jaFavoritado = await Postgre.verificarPosse(usuario.user, bookId);
 
-        if (jaPossui) {
-            res.send('Você já possui esse livro na conta!')
+        if (jaFavoritado) {
+            res.send('Você já favoritou este livro!');
         } else {
-            await Postgre.adicionarLivro(usuario.user, bookId);
-            console.log("Operação concluída");
-            res.redirect('/user');  // Redireciona para o perfil para ver o livro comprado
+            await Postgre.adicionarLivro(usuario.user, bookId); // Mantém a função do banco para associar o livro ao usuário
+            res.redirect('/user');
         }
     } catch (err) {
         console.error(err);
-        res.status(500).send('Erro ao comprar livro.');
+        res.status(500).send('Erro ao favoritar livro.');
     }
 });
 
-// Ação: Enviar Review
+// Ação: Enviar / Atualizar Review
 app.post('/review/:id', async (req, res) => {
     try {
         const usuario = req.session.usuario;
-
         const bookId = req.params.id;
         const { nota, texto } = req.body;
 
-        const reviewExistente = await MongoDB.verificarReview(usuario.user, bookId);  // checa se o usuário já avaliou esse livro;
+        const reviewExistente = await MongoDB.verificarReview(usuario.user, bookId);
 
         const dadosReview = {
             nota: Number(nota) || 5,
             comentario: texto || ''
         };
 
-        if (reviewExistente) {  // se já avaliou atualiza a review antiga;
+        if (reviewExistente) {
             await MongoDB.updateReview(usuario.user, bookId, dadosReview);
-        } else {  // se não adiciona uma nova review;
+        } else {
             const novaReview = {
                 bookId: bookId,
                 user: usuario.user,
@@ -226,22 +228,24 @@ app.post('/review/:id', async (req, res) => {
     }
 });
 
-// Ação Admin: Adicionar Novo Livro
+// Ação Admin: Adicionar Novo Livro (Removido o campo de preço e capa conforme pedido)
 app.post('/admin/add-book', async (req, res) => {
     try {
-        const { titulo, sinopse, genero, autor, preco, capa } = req.body;
+        const usuario = req.session.usuario;
+        if (!usuario || usuario.user.toLowerCase() !== 'admin') {
+            return res.status(403).send('Acesso negado.');
+        }
+
+        const { titulo, sinopse, genero, autor } = req.body;
 
         await MongoDB.adicionarLivro({
             titulo,
             sinopse,
             genero,
-            autor,
-            preco,
-            capa
+            autor
         });
 
         res.redirect('/home');
-
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao cadastrar livro');
