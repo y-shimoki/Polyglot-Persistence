@@ -228,6 +228,80 @@ app.post('/review/:id', async (req, res) => {
     }
 });
 
+// Ação: Apagar Review
+app.post('/review/delete/:id', async (req, res) => {
+    try {
+        const usuario = req.session.usuario;
+        const reviewId = req.params.id;
+
+        if (!usuario) {
+            return res.status(401).send('Você precisa estar logado.');
+        }
+
+        const reviewApagada = await MongoDB.deleteReview(reviewId, usuario.user);
+
+        if (!reviewApagada) {
+            return res.status(404).send('Review não encontrada.');
+        }
+
+        res.redirect('/user');
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao apagar review.');
+    }
+});
+
+// Ação: Excluir conta do usuário
+app.post('/user/delete', async (req, res) => {
+    try {
+        const usuario = req.session.usuario;
+
+        if (!usuario) {
+            return res.redirect('/login');
+        }
+
+        // Apaga todas as reviews do usuário no MongoDB
+        await MongoDB.deleteReviewsByUser(usuario.user);
+
+        // Apaga os favoritos e a conta do usuário no PostgreSQL
+        await Postgre.deleteAccount(usuario.user);
+
+        // Encerra a sessão
+        req.session.destroy((err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Erro ao encerrar a sessão.');
+            }
+
+            res.redirect('/');
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao excluir a conta.');
+    }
+});
+
+// Ação: Remover livro da conta
+app.post('/unfavorite/:id', async (req, res) => {
+    try {
+        const usuario = req.session.usuario;
+        const bookId = req.params.id;
+
+        if (!usuario) {
+            return res.redirect('/login');
+        }
+
+        await Postgre.removerLivro(usuario.user, bookId);
+
+        res.redirect('/user');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao remover livro da conta.');
+    }
+});
+
 // Ação Admin: Adicionar Novo Livro (Removido o campo de preço e capa conforme pedido)
 app.post('/admin/add-book', async (req, res) => {
     try {
@@ -238,7 +312,7 @@ app.post('/admin/add-book', async (req, res) => {
 
         const { titulo, sinopse, genero, autor } = req.body;
 
-        await MongoDB.adicionarLivro({
+        await MongoDB.addLivro({
             titulo,
             sinopse,
             genero,
@@ -249,6 +323,52 @@ app.post('/admin/add-book', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao cadastrar livro');
+    }
+});
+
+// Ação Admin: Atualizar Livro
+app.post('/admin/edit-book/:id', async (req, res) => {
+    try {
+        const usuario = req.session.usuario;
+
+        if (!usuario || usuario.user.toLowerCase() !== 'admin') {
+            return res.status(403).send('Acesso negado.');
+        }
+
+        const bookId = req.params.id;
+        const { titulo, sinopse, genero, autor } = req.body;
+
+        await MongoDB.atualizarLivro(bookId, {
+            titulo,
+            sinopse,
+            genero,
+            autor
+        });
+
+        res.redirect(`/book/${bookId}`);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao atualizar livro.');
+    }
+});
+
+// Ação Admin: Apagar Livro
+app.post('/admin/delete-book/:id', async (req, res) => {
+    try {
+        const usuario = req.session.usuario;
+
+        if (!usuario || usuario.user.toLowerCase() !== 'admin') {
+            return res.status(403).send('Acesso negado.');
+        }
+
+        const bookId = req.params.id;
+
+        await MongoDB.apagarLivro(bookId);
+
+        res.redirect('/home');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao apagar livro.');
     }
 });
 

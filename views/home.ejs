@@ -43,9 +43,9 @@
     <div class="book-grid" id="bookGrid">
       <% if (typeof livros !== 'undefined' && livros.length > 0) { %>
         <% livros.forEach(livro => { %>
-          <div class="book-card" data-title="<%= livro.titulo.toLowerCase() %>" data-author="<%= livro.autor.toLowerCase() %>" data-genre="<%= livro.generos ? livro.generos.toLowerCase() : '' %>">
+          <div class="book-card" data-title="<%= livro.titulo.toLowerCase() %>" data-author="<%= livro.autor.toLowerCase() %>" data-genre="<%= livro.genero ? livro.genero.join(' ').toLowerCase() : '' %>">
             <div>
-              <span class="book-genre"><%= livro.generos %></span>
+              <span class="book-genre"><%= livro.genero.join(" / ") %></span>
               <h3 style="margin: 5px 0 10px 0; font-size: 17px; color: var(--text-main);"><%= livro.titulo %></h3>
               <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 8px 0;"><strong>Autor(a):</strong> <%= livro.autor %></p>
               <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 8px;"><%= livro.sinopse %></p>
