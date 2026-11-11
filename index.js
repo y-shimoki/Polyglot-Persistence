@@ -34,7 +34,7 @@ app.get('/home', async (req, res) => {
         if (!usuario) return res.redirect('/');
 
         const livros = await MongoDB.getLivros();
-        const isAdmin = usuario.user.toLowerCase() === 'admin';
+        const isAdmin = usuario.admin === true;
 
         res.render('home', { 
             livros,
@@ -51,12 +51,18 @@ app.get('/home', async (req, res) => {
 app.get('/admin', async (req, res) => {
     try {
         const usuario = req.session.usuario;
-        if (!usuario || usuario.user.toLowerCase() !== 'admin') {
+
+        if (!usuario || usuario.admin !== true) {
             return res.status(403).send('Acesso negado.');
         }
 
         const livros = await MongoDB.getLivros();
-        res.render('admin', { livros, usuario }); // Certifique-se de ter uma view 'admin.ejs' se necessário
+
+        res.render('admin', {
+            livros,
+            usuario
+        });
+
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao carregar painel do admin.');
@@ -144,8 +150,17 @@ app.get('/logout', (req, res) => {
 app.post('/login', async (req, res) => {
     try {
         const { nome, senha } = req.body;
-        const usuario = await Postgre.getUsuario(nome);
 
+        // verifica se o login é do administrador antes de consultar o banco:
+        if (
+            nome === process.env.ADMIN_USER &&
+            senha === process.env.ADMIN_PASSWORD
+        ) {
+            req.session.usuario = { user: nome, admin: true };
+            return res.redirect('/home');
+        }
+
+        const usuario = await Postgre.getUsuario(nome);
         if (!usuario || usuario.senha !== senha) {
             return res.send('Usuário ou senha incorretos.');
         }
@@ -164,7 +179,7 @@ app.post('/register', async (req, res) => {
         const { nome, senha } = req.body;
         const usuarioExistente = await Postgre.getUsuario(nome);
 
-        if (usuarioExistente) {
+        if (usuarioExistente || nome === process.env.ADMIN_USER) {
             return res.send('Nome de usuário já existe.');
         }
 
@@ -302,8 +317,16 @@ app.post('/unfavorite/:id', async (req, res) => {
     }
 });
 
+// função auxiliar para proteção das ações de admin:
+function verificarAdmin(req, res, next) {
+    if (req.session.usuario?.admin) {
+        return next();
+    }
+    return res.status(403).send('Acesso permitido apenas ao administrador.');
+}
+
 // Ação Admin: Adicionar Novo Livro (Removido o campo de preço e capa conforme pedido)
-app.post('/admin/add-book', async (req, res) => {
+app.post('/admin/add-book', verificarAdmin, async (req, res) => {
     try {
         const usuario = req.session.usuario;
         if (!usuario || usuario.user.toLowerCase() !== 'admin') {
@@ -327,7 +350,7 @@ app.post('/admin/add-book', async (req, res) => {
 });
 
 // Ação Admin: Atualizar Livro
-app.post('/admin/edit-book/:id', async (req, res) => {
+app.post('/admin/edit-book/:id', verificarAdmin, async (req, res) => {
     try {
         const usuario = req.session.usuario;
 
@@ -353,7 +376,7 @@ app.post('/admin/edit-book/:id', async (req, res) => {
 });
 
 // Ação Admin: Apagar Livro
-app.post('/admin/delete-book/:id', async (req, res) => {
+app.post('/admin/delete-book/:id', verificarAdmin, async (req, res) => {
     try {
         const usuario = req.session.usuario;
 
