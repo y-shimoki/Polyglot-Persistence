@@ -320,13 +320,8 @@ function verificarAdmin(req, res, next) {
 }
 
 // Ação Admin: Adicionar Novo Livro (Removido o campo de preço e capa conforme pedido)
-app.post('/admin/add-book', async (req, res) => {
+app.post('/admin/add-book', verificarAdmin, async (req, res) => {
     try {
-        const usuario = req.session.usuario;
-        if (!usuario || usuario.user.toLowerCase() !== 'admin') {
-            return res.status(403).send('Acesso negado.');
-        }
-
         const { titulo, sinopse, genero, autor } = req.body;
 
         await MongoDB.addLivro({
@@ -340,6 +335,33 @@ app.post('/admin/add-book', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao cadastrar livro');
+    }
+});
+
+app.post('/admin/update-book/:id', verificarAdmin, async (req, res) => {
+    try {
+        const { livro } = req.body;
+        const bookId = req.params.id;
+
+        await MongoDB.updateLivro(bookId, livro);
+
+        res.redirect('/admin');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao atualizar livro');
+    }
+});
+
+app.post('/admin/delete-book/:id', verificarAdmin, async (req, res) => {
+    try {
+        const bookId = req.params.id;
+
+        await MongoDB.deleteLivro(bookId);
+
+        res.redirect('/admin');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao deletar livro');
     }
 });
 
