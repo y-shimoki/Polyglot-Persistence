@@ -47,7 +47,7 @@ app.get('/home', async (req, res) => {
     }
 });
 
-// Página do Painel do Administrador (Nova rota para facilitar o acesso do professor)
+// Página do Painel do Administrador
 app.get('/admin', async (req, res) => {
     try {
         const usuario = req.session.usuario;
@@ -56,7 +56,7 @@ app.get('/admin', async (req, res) => {
         }
 
         const livros = await MongoDB.getLivros();
-        res.render('admin', { livros, usuario }); // Certifique-se de ter uma view 'admin.ejs' se necessário
+        res.render('admin', { livros, usuario });
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao carregar painel do admin.');
@@ -69,7 +69,6 @@ app.get('/user', async (req, res) => {
         const usuario = req.session.usuario;
         if (!usuario) return res.redirect('/');
 
-        // Retorna os IDs dos livros favoritados pelo usuário
         const idLivros = await Postgre.getLivrosDoUsuario(usuario.user);
 
         const livros = await Promise.all(
@@ -176,7 +175,7 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// Ação: Favoritar Livro (Antiga rota de compra, agora adaptada para favoritos sem dinheiro)
+// Ação: Favoritar Livro
 app.post('/favorite/:id', async (req, res) => {
    try {
         const usuario = req.session.usuario;
@@ -187,7 +186,7 @@ app.post('/favorite/:id', async (req, res) => {
         if (jaFavoritado) {
             res.send('Você já favoritou este livro!');
         } else {
-            await Postgre.adicionarLivro(usuario.user, bookId); // Mantém a função do banco para associar o livro ao usuário
+            await Postgre.adicionarLivro(usuario.user, bookId);
             res.redirect('/user');
         }
     } catch (err) {
@@ -228,7 +227,7 @@ app.post('/review/:id', async (req, res) => {
     }
 });
 
-// Ação Admin: Adicionar Novo Livro (Removido o campo de preço e capa conforme pedido)
+// Ação Admin: Adicionar Novo Livro
 app.post('/admin/add-book', async (req, res) => {
     try {
         const usuario = req.session.usuario;
@@ -245,10 +244,53 @@ app.post('/admin/add-book', async (req, res) => {
             autor
         });
 
-        res.redirect('/home');
+        res.redirect('/admin');
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao cadastrar livro');
+    }
+});
+
+// Ação Admin: Atualizar Livro (CRUD - Update)
+app.post('/admin/update-book/:id', async (req, res) => {
+    try {
+        const usuario = req.session.usuario;
+        if (!usuario || usuario.user.toLowerCase() !== 'admin') {
+            return res.status(403).send('Acesso negado.');
+        }
+
+        const bookId = req.params.id;
+        const { titulo, sinopse, genero, autor } = req.body;
+
+        await MongoDB.atualizarLivro(bookId, {
+            titulo,
+            sinopse,
+            genero,
+            autor
+        });
+
+        res.redirect('/admin');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao atualizar livro');
+    }
+});
+
+// Ação Admin: Deletar Livro (CRUD - Delete)
+app.post('/admin/delete-book/:id', async (req, res) => {
+    try {
+        const usuario = req.session.usuario;
+        if (!usuario || usuario.user.toLowerCase() !== 'admin') {
+            return res.status(403).send('Acesso negado.');
+        }
+
+        const bookId = req.params.id;
+        await MongoDB.deletarLivro(bookId);
+
+        res.redirect('/admin');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao deletar livro');
     }
 });
 
