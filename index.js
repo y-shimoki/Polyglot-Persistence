@@ -34,7 +34,7 @@ app.get('/home', async (req, res) => {
         if (!usuario) return res.redirect('/');
 
         const livros = await MongoDB.getLivros();
-        const isAdmin = usuario.user.toLowerCase() === 'admin';
+        const isAdmin = usuario.admin === true;
 
         res.render('home', { 
             livros,
@@ -51,12 +51,13 @@ app.get('/home', async (req, res) => {
 app.get('/admin', async (req, res) => {
     try {
         const usuario = req.session.usuario;
-        if (!usuario || usuario.user.toLowerCase() !== 'admin') {
+
+        if (!usuario || usuario.admin !== true) {
             return res.status(403).send('Acesso negado.');
         }
 
         const livros = await MongoDB.getLivros();
-        res.render('admin', { livros, usuario });
+        res.render('admin', { livros, usuario }); // Certifique-se de ter uma view 'admin.ejs' se necessário
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao carregar painel do admin.');
@@ -143,8 +144,17 @@ app.get('/logout', (req, res) => {
 app.post('/login', async (req, res) => {
     try {
         const { nome, senha } = req.body;
-        const usuario = await Postgre.getUsuario(nome);
 
+        // verifica se o login é do administrador antes de consultar o banco:
+        if (
+            nome === process.env.ADMIN_USER &&
+            senha === process.env.ADMIN_PASSWORD
+        ) {
+            req.session.usuario = { user: nome, admin: true };
+            return res.redirect('/home');
+        }
+
+        const usuario = await Postgre.getUsuario(nome);
         if (!usuario || usuario.senha !== senha) {
             return res.send('Usuário ou senha incorretos.');
         }
@@ -163,7 +173,7 @@ app.post('/register', async (req, res) => {
         const { nome, senha } = req.body;
         const usuarioExistente = await Postgre.getUsuario(nome);
 
-        if (usuarioExistente) {
+        if (usuarioExistente || nome === process.env.ADMIN_USER) {
             return res.send('Nome de usuário já existe.');
         }
 
@@ -227,7 +237,89 @@ app.post('/review/:id', async (req, res) => {
     }
 });
 
-// Ação Admin: Adicionar Novo Livro
+// Ação: Apagar Review
+app.post('/review/delete/:id', async (req, res) => {
+    try {
+        const usuario = req.session.usuario;
+        const reviewId = req.params.id;
+
+        if (!usuario) {
+            return res.status(401).send('Você precisa estar logado.');
+        }
+
+        const reviewApagada = await MongoDB.deleteReview(reviewId, usuario.user);
+
+        if (!reviewApagada) {
+            return res.status(404).send('Review não encontrada.');
+        }
+
+        res.redirect('/user');
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao apagar review.');
+    }
+});
+
+// Ação: Excluir conta do usuário
+app.post('/user/delete', async (req, res) => {
+    try {
+        const usuario = req.session.usuario;
+
+        if (!usuario) {
+            return res.redirect('/login');
+        }
+
+        // Apaga todas as reviews do usuário no MongoDB
+        await MongoDB.deleteReviewsByUser(usuario.user);
+
+        // Apaga os favoritos e a conta do usuário no PostgreSQL
+        await Postgre.deleteAccount(usuario.user);
+
+        // Encerra a sessão
+        req.session.destroy((err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Erro ao encerrar a sessão.');
+            }
+
+            res.redirect('/');
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao excluir a conta.');
+    }
+});
+
+// Ação: Remover livro da conta
+app.post('/unfavorite/:id', async (req, res) => {
+    try {
+        const usuario = req.session.usuario;
+        const bookId = req.params.id;
+
+        if (!usuario) {
+            return res.redirect('/login');
+        }
+
+        await Postgre.removerLivro(usuario.user, bookId);
+
+        res.redirect('/user');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao remover livro da conta.');
+    }
+});
+
+// função auxiliar para proteção das ações de admin:
+function verificarAdmin(req, res, next) {
+    if (req.session.usuario?.admin) {
+        return next();
+    }
+    return res.status(403).send('Acesso permitido apenas ao administrador.');
+}
+
+// Ação Admin: Adicionar Novo Livro (Removido o campo de preço e capa conforme pedido)
 app.post('/admin/add-book', async (req, res) => {
     try {
         const usuario = req.session.usuario;
@@ -237,7 +329,7 @@ app.post('/admin/add-book', async (req, res) => {
 
         const { titulo, sinopse, genero, autor } = req.body;
 
-        await MongoDB.adicionarLivro({
+        await MongoDB.addLivro({
             titulo,
             sinopse,
             genero,
@@ -248,49 +340,6 @@ app.post('/admin/add-book', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao cadastrar livro');
-    }
-});
-
-// Ação Admin: Atualizar Livro (CRUD - Update)
-app.post('/admin/update-book/:id', async (req, res) => {
-    try {
-        const usuario = req.session.usuario;
-        if (!usuario || usuario.user.toLowerCase() !== 'admin') {
-            return res.status(403).send('Acesso negado.');
-        }
-
-        const bookId = req.params.id;
-        const { titulo, sinopse, genero, autor } = req.body;
-
-        await MongoDB.atualizarLivro(bookId, {
-            titulo,
-            sinopse,
-            genero,
-            autor
-        });
-
-        res.redirect('/admin');
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Erro ao atualizar livro');
-    }
-});
-
-// Ação Admin: Deletar Livro (CRUD - Delete)
-app.post('/admin/delete-book/:id', async (req, res) => {
-    try {
-        const usuario = req.session.usuario;
-        if (!usuario || usuario.user.toLowerCase() !== 'admin') {
-            return res.status(403).send('Acesso negado.');
-        }
-
-        const bookId = req.params.id;
-        await MongoDB.deletarLivro(bookId);
-
-        res.redirect('/admin');
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Erro ao deletar livro');
     }
 });
 

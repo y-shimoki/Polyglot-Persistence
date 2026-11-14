@@ -26,10 +26,6 @@ const LivroSchema = new mongoose.Schema({
     type: [String],
     required: true
   },
-  preco: {
-    type: Number,
-    required: true
-  },
   sinopse: {
     type: String,
     required: true
@@ -62,6 +58,20 @@ const ReviewSchema = new mongoose.Schema({
 const Livro = mongoose.model("Livro", LivroSchema, "Livros");
 const Review = mongoose.model("Review", ReviewSchema, "Reviews");
 
+// CREATE //
+// cadastrar livro (para adm): 
+export async function addLivro(dadosLivro) {
+  const novoLivro = new Livro(dadosLivro);
+  return await novoLivro.save();
+}
+
+// adicionar review: 
+export async function addReview(dadosReview) {
+  const novaReview = new Review(dadosReview);
+  return await novaReview.save();
+}
+
+// READ //
 // buscar todos os livros:
 export async function getLivros(){
   return await Livro.find();
@@ -71,12 +81,6 @@ export async function getLivros(){
 export async function getLivroPorId(id) {
   return await Livro.findById(id);
 }
-
-/* ou buscar por título: 
-export async function getLivroPorTitulo(titulo) {
-  return await Livro.find({ titulo: titulo });
-}
-*/
 
 // pesquisar livro por título:
 export async function pesquisarPorTitulo(tituloCaixaDeTexto) {
@@ -112,24 +116,22 @@ export async function getReviewsDoUsuario(user) {
   return await Review.find({ user: user });
 }
 
-// cadastrar livro (para adm): 
-export async function cadastrarLivro(dadosLivro) {
-  const novoLivro = new Livro(dadosLivro);
-  return await novoLivro.save();
-}
-
-// adicionar review: 
-export async function addReview(dadosReview) {
-  const novaReview = new Review(dadosReview);
-  return await novaReview.save();
-}
-
 // verifica se um usuário já avaliou um livro:
 export async function verificarReview(user, bookId) {
     return await Review.findOne({
         user: user,
         bookId: bookId
     });
+}
+
+// UPDATE //
+// atualizar livro (para adm): 
+export async function updateLivro(id, dadosLivro) {
+    return await Livro.findByIdAndUpdate(
+        id,
+        dadosLivro,
+        { returnDocument: 'after', runValidators: true }
+    );
 }
 
 // atualizar review:
@@ -145,6 +147,25 @@ export async function updateReview(user, bookId, dadosReview) {
         },
         { returnDocument: 'after' }
     );
+}
+
+// DELETE //
+// apagar livro (para adm):
+export async function deleteLivro(id) {
+    return await Livro.findByIdAndDelete(id);
+}
+
+// apagar review:
+export async function deleteReview(reviewId, user) {
+    return await Review.findOneAndDelete({
+        _id: reviewId,
+        user: user
+    });
+}
+
+// apagar todas as reviews de um usuário (caso excluir a conta):
+export async function deleteReviewsByUser(user) {
+    return await Review.deleteMany({ user: user });
 }
 
 /*

@@ -10,7 +10,7 @@
     <a href="/home" style="text-decoration: none; color: #2563eb; font-weight: 600;">← Voltar para o Catálogo</a>
     
     <div style="background: white; padding: 30px; border-radius: 12px; margin-top: 20px; border: 1px solid var(--border);">
-      <span class="book-genre"><%= livro.generos %></span>
+      <span class="book-genre"><%= livro.genero.join(" / ") %></span>
       <h1 style="margin: 10px 0; color: var(--text-main);"><%= livro.titulo %></h1>
       <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 15px;"><strong>Autor(a):</strong> <%= livro.autor %></p>
       <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 25px;"><%= livro.sinopse %></p>
@@ -32,9 +32,13 @@
         <label>Comentário:</label>
         <textarea name="texto" rows="4" placeholder="Escreva a sua review..." style="padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;"><%= reviewUsuario ? reviewUsuario.comentario : '' %></textarea>
         
-        <button type="submit" class="btn" style="width: fit-content; padding: 8px 16px;">Salvar Review</button>
+        <button type="submit" class="btn" style="width: fit-content; padding: 8px 16px; background-color: green;">Salvar Review</button>
       </form>
-
+      <% if (reviewUsuario) { %>
+        <form action="/review/delete/<%= reviewUsuario._id %>" method="POST" style="margin-top: 12px;">
+          <button type="submit" class="btn" style="width: fit-content; padding: 8px 16px; background-color: red;">Excluir Review</button>
+        </form>
+      <% } %>
       <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
 
       <h3>Avaliações da Comunidade</h3>
