@@ -57,7 +57,7 @@ app.get('/admin', async (req, res) => {
         }
 
         const livros = await MongoDB.getLivros();
-        res.render('admin', { livros, usuario }); // Certifique-se de ter uma view 'admin.ejs' se necessário
+        res.render('admin', { books: livros, usuario }); // Certifique-se de ter uma view 'admin.ejs' se necessário
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao carregar painel do admin.');

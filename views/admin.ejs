@@ -22,14 +22,14 @@
     <header style="padding: 15px 30px; background: #222; color: #fff; display: flex; justify-content: space-between; align-items: center;">
         <h1>Painel Admin</h1>
         <nav>
-            <a href="/" style="color: #fff; text-decoration: none; font-weight: bold;">← Voltar para Home</a>
+            <a href="/home" style="color: #fff; text-decoration: none; font-weight: bold;">← Voltar para Home</a>
         </nav>
     </header>
 
     <main class="admin-container">
         <section>
             <h2>Adicionar Novo Livro</h2>
-            <form action="/admin/books" method="POST">
+            <form action="/admin/add-book" method="POST">
                 <div class="form-group">
                     <label>Título:</label>
                     <input type="text" name="title" required>
