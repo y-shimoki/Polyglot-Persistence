@@ -77,7 +77,7 @@ export async function getLivrosDoUsuario(user) {
 - **Escalabilidade horizontal** para o volume crescente de reviews.
 - **Agregações** (`aggregate`) possibilidade de calcular média de notas e quantidade de avaliações por livro, por exemplo.
 
-**Modelos (exemplo):**
+**Modelos:**
 
 ```js
 import mongoose from "mongoose";
