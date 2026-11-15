@@ -57,7 +57,7 @@ app.get('/admin', async (req, res) => {
         }
 
         const livros = await MongoDB.getLivros();
-        res.render('admin', { books: livros, usuario }); // Certifique-se de ter uma view 'admin.ejs' se necessário
+        res.render('admin', { books: livros, usuario });
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao carregar painel do admin.');
@@ -88,7 +88,7 @@ app.get('/user', async (req, res) => {
             })
         );
 
-        const isAdmin = usuario.user.toLowerCase() === 'admin';
+        const isAdmin = usuario.admin === true;
 
         res.render('user', {
             usuario,
@@ -319,7 +319,7 @@ function verificarAdmin(req, res, next) {
     return res.status(403).send('Acesso permitido apenas ao administrador.');
 }
 
-// Ação Admin: Adicionar Novo Livro (Removido o campo de preço e capa conforme pedido)
+// Ação Admin: Adicionar Novo Livro 
 app.post('/admin/add-book', verificarAdmin, async (req, res) => {
     try {
         const { titulo, sinopse, genero, autor } = req.body;
@@ -327,7 +327,7 @@ app.post('/admin/add-book', verificarAdmin, async (req, res) => {
         await MongoDB.addLivro({
             titulo,
             sinopse,
-            genero,
+            genero: genero.split(',').map(item => item.trim()).filter(item => item !== ''),
             autor
         });
 

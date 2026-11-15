@@ -61,12 +61,21 @@
       <% } %>
     </div>
 
-    <!-- Excluir Conta -->
+    <!-- Logout -->
     <div style="margin-top: 30px; text-align: right;">
-      <form action="/user/delete" method="POST" onsubmit="return confirm('Tem certeza absoluta que deseja excluir a sua conta?');">
-        <button type="submit" style="background: #dc2626; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">Excluir Minha Conta</button>
+      <form action="/logout" method="GET">
+        <button type="submit" style="background: #dc2626; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">Logout</button>
       </form>
     </div>
+
+    <!-- Excluir Conta -->
+    <% if (!isAdmin) { %>
+      <div style="margin-top: 30px; text-align: right;">
+        <form action="/user/delete" method="POST" onsubmit="return confirm('Tem certeza absoluta que deseja excluir a sua conta?');">
+          <button type="submit" style="background: #dc2626; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">Excluir Minha Conta</button>
+        </form>
+      </div>
+    <% } %>
   </div>
 </body>
 </html>
