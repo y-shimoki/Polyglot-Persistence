@@ -2,6 +2,8 @@
 
 O projeto é uma **plataforma de avaliação de livros**. Nela, os usuários podem se cadastrar, explorar o catálogo de livros, escrever reviews (nota e comentário) e marcar livros como favoritos para consultar depois.
 
+A plataforma também conta com uma área de **administração**, em que o administrador pode **adicionar, editar e remover livros** do catálogo. As credenciais do administrador não ficam armazenadas em nenhum banco de dados: elas são definidas por variáveis de ambiente no arquivo `.env`, o que dispensa uma tabela específica para esse perfil.
+
 O sistema combina três bancos de dados, cada um escolhido de acordo com o tipo de dado que armazena e com o padrão de acesso esperado:
 
 | Dado | Banco | Motivo resumido |
