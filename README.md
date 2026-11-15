@@ -4,7 +4,7 @@ O projeto é uma **plataforma de avaliação de livros**. Nela, os usuários pod
 
 A plataforma também conta com uma área de **administração**, em que o administrador pode **adicionar, editar e remover livros** do catálogo. As credenciais do administrador não ficam armazenadas em nenhum banco de dados: elas são definidas por variáveis de ambiente no arquivo `.env`, o que dispensa uma tabela específica para esse perfil.
 
-O sistema combina três bancos de dados distintos, um relacional e dois não relacionais, cada um escolhido de acordo com o tipo de dado que armazena e com o padrão de acesso esperado:
+O sistema combina três bancos de dados distintos, um relacional e dois não relacionais (NoSQL), cada um escolhido de acordo com o tipo de dado que armazena e com o padrão de acesso esperado:
 
 | Dado | Banco | Motivo resumido |
 |---|---|---|
