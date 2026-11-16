@@ -199,7 +199,7 @@ Se o comando falhar, você precisa instalar o Node.js. Nesse caso, se você esti
 winget install OpenJS.NodeJS
 ```
 
-## 2. Clone o repositório e instale as dependências
+## 2. (Se você não ter o .zip): Clone o repositório e instale as dependências
 
 Para clonar o repositório, abra o terminal em uma pasta de sua escolha, e digite:
 
@@ -216,11 +216,7 @@ npm install
 
 Esse último comando irá instalar as dependências do projeto.
 
-## 3. Tenha o arquivo `.env` na raiz do projeto
-
-O arquivo será enviado junto do projeto. Coloque-o na pasta raiz do projeto (`PolyglotPersistence/.env` se você não renomeou a pasta de clonagem acima).
-
-## 4. Execute o projeto
+## 3. Execute o projeto
 
 Execute o comando:
 
