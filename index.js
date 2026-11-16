@@ -1,8 +1,8 @@
 import express from 'express';
-import session from 'express-session';
 import 'dotenv/config';
 import * as MongoDB from './src/mongodb.js';
 import * as Postgre from './src/postgre.js';
+import * as Redis from './src/redis.js';
 
 const app = express();
 
@@ -10,15 +10,53 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
-app.use(session({
-    secret: 'minha_chave_secreta_super_segura',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }
-}));
+
+// ================= SESSÃO (cookie + Redis) =================
+const COOKIE_SESSAO = 'sessionId';
+const OPCOES_COOKIE = {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: false
+};
+
+function lerCookie(req, nome) {
+    const cabecalho = req.headers.cookie;
+    if (!cabecalho) return null;
+
+    for (const par of cabecalho.split(';')) {
+        const [chave, ...valor] = par.trim().split('=');
+        if (chave === nome) return valor.join('=');
+    }
+    return null;
+}
+
+async function iniciarSessao(req, res, usuario) {
+    // se já existia uma sessão neste navegador ela é apagada
+    await Redis.deleteSessao(req.sessionId);
+
+    const sessionId = await Redis.criarSessao(usuario);
+    res.cookie(COOKIE_SESSAO, sessionId, OPCOES_COOKIE);
+}
+
+async function encerrarSessao(req, res) {
+    await Redis.deleteSessao(req.sessionId);
+    res.clearCookie(COOKIE_SESSAO, OPCOES_COOKIE);
+}
+
+app.use(async (req, res, next) => {
+    try {
+        req.sessionId = lerCookie(req, COOKIE_SESSAO);
+        req.usuario = await Redis.getSessao(req.sessionId);
+        next();
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao carregar a sessão.');
+    }
+});
 
 await MongoDB.connectToMongoDB();
 await Postgre.connectToPostgreSQL();
+await Redis.connectToRedis();
 
 // ================= ROTAS GET (PÁGINAS) =================
 
@@ -30,7 +68,7 @@ app.get('/', (req, res) => {
 // Página 2: Home (Catálogo)
 app.get('/home', async (req, res) => {
     try {
-        const usuario = req.session.usuario;
+        const usuario = req.usuario;
         if (!usuario) return res.redirect('/');
 
         const livros = await MongoDB.getLivros();
@@ -50,7 +88,7 @@ app.get('/home', async (req, res) => {
 // Página do Painel do Administrador
 app.get('/admin', async (req, res) => {
     try {
-        const usuario = req.session.usuario;
+        const usuario = req.usuario;
 
         if (!usuario || usuario.admin !== true) {
             return res.status(403).send('Acesso negado.');
@@ -67,7 +105,7 @@ app.get('/admin', async (req, res) => {
 // Página 3: Perfil do Usuário / Favoritos e Reviews
 app.get('/user', async (req, res) => {
     try {
-        const usuario = req.session.usuario;
+        const usuario = req.usuario;
         if (!usuario) return res.redirect('/');
 
         const idLivros = await Postgre.getLivrosDoUsuario(usuario.user);
@@ -106,7 +144,7 @@ app.get('/user', async (req, res) => {
 // Página 4: Detalhes do Livro
 app.get('/book/:id', async (req, res) => {
     try {
-        const usuario = req.session.usuario;
+        const usuario = req.usuario;
         if (!usuario) return res.redirect('/');
 
         const bookId = req.params.id;
@@ -132,10 +170,14 @@ app.get('/book/:id', async (req, res) => {
 });
 
 // Ação: Terminar Sessão (Logout)
-app.get('/logout', (req, res) => {
-    req.session.destroy(() => {
+app.get('/logout', async (req, res) => {
+    try {
+        await encerrarSessao(req, res);
         res.redirect('/');
-    });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao encerrar a sessão.');
+    }
 });
 
 // ================= ROTAS POST (AÇÕES) =================
@@ -150,7 +192,7 @@ app.post('/login', async (req, res) => {
             nome === process.env.ADMIN_USER &&
             senha === process.env.ADMIN_PASSWORD
         ) {
-            req.session.usuario = { user: nome, admin: true };
+            await iniciarSessao(req, res, { user: nome, admin: true });
             return res.redirect('/home');
         }
 
@@ -159,7 +201,8 @@ app.post('/login', async (req, res) => {
             return res.send('Usuário ou senha incorretos.');
         }
 
-        req.session.usuario = { user: nome, senha };
+        // a senha não é guardada na sessão (nada no app usa e ela ficaria em texto puro no Redis):
+        await iniciarSessao(req, res, { user: nome });
         res.redirect('/home');
     } catch (err) {
         console.error(err);
@@ -188,7 +231,7 @@ app.post('/register', async (req, res) => {
 // Ação: Favoritar Livro
 app.post('/favorite/:id', async (req, res) => {
    try {
-        const usuario = req.session.usuario;
+        const usuario = req.usuario;
         const bookId = req.params.id;
 
         const jaFavoritado = await Postgre.verificarPosse(usuario.user, bookId);
@@ -208,7 +251,7 @@ app.post('/favorite/:id', async (req, res) => {
 // Ação: Enviar / Atualizar Review
 app.post('/review/:id', async (req, res) => {
     try {
-        const usuario = req.session.usuario;
+        const usuario = req.usuario;
         const bookId = req.params.id;
         const { nota, texto } = req.body;
 
@@ -240,7 +283,7 @@ app.post('/review/:id', async (req, res) => {
 // Ação: Apagar Review
 app.post('/review/delete/:id', async (req, res) => {
     try {
-        const usuario = req.session.usuario;
+        const usuario = req.usuario;
         const reviewId = req.params.id;
 
         if (!usuario) {
@@ -264,7 +307,7 @@ app.post('/review/delete/:id', async (req, res) => {
 // Ação: Excluir conta do usuário
 app.post('/user/delete', async (req, res) => {
     try {
-        const usuario = req.session.usuario;
+        const usuario = req.usuario;
 
         if (!usuario) {
             return res.redirect('/login');
@@ -277,14 +320,8 @@ app.post('/user/delete', async (req, res) => {
         await Postgre.deleteAccount(usuario.user);
 
         // Encerra a sessão
-        req.session.destroy((err) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).send('Erro ao encerrar a sessão.');
-            }
-
-            res.redirect('/');
-        });
+        await encerrarSessao(req, res);
+        res.redirect('/');
 
     } catch (err) {
         console.error(err);
@@ -295,7 +332,7 @@ app.post('/user/delete', async (req, res) => {
 // Ação: Remover livro da conta
 app.post('/unfavorite/:id', async (req, res) => {
     try {
-        const usuario = req.session.usuario;
+        const usuario = req.usuario;
         const bookId = req.params.id;
 
         if (!usuario) {
@@ -313,7 +350,7 @@ app.post('/unfavorite/:id', async (req, res) => {
 
 // função auxiliar para proteção das ações de admin:
 function verificarAdmin(req, res, next) {
-    if (req.session.usuario?.admin) {
+    if (req.usuario?.admin) {
         return next();
     }
     return res.status(403).send('Acesso permitido apenas ao administrador.');
