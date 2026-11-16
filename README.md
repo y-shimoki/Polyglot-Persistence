@@ -54,7 +54,7 @@ CREATE TABLE public."Usuario_livro" (
 ```js
 import postgres from "postgres";
 
-const sql = postgres(process.env.DATABASE_URL, { ssl: "require" });
+const sql = postgres(process.env.DATABASE_URL_POOLED, { ssl: "require" });
 
 // Exemplo: listar favoritos de um usuário
 export async function getLivrosDoUsuario(user) {
@@ -77,7 +77,7 @@ export async function getLivrosDoUsuario(user) {
 - **Esquema flexível:** livros podem ter atributos variados (título, múltiplos gêneros, autor, sinopse, imagens) sem a necessidade de alterar tabelas.
 - **Documentos aninhados e arrays:** gêneros ficam dentro do próprio documento, evitando tabelas auxiliares e `JOIN`s.
 - **Escalabilidade horizontal** para o volume crescente de reviews.
-- **Agregações** (`aggregate`) possibilidade de calcular média de notas e quantidade de avaliações por livro, por exemplo.
+- **Agregações** (`aggregate`): possibilidade de calcular média de notas e quantidade de avaliações por livro, por exemplo.
 
 **Modelos:**
 
