@@ -146,10 +146,38 @@ const Review = mongoose.model("Review", ReviewSchema, "Reviews");
 - **Reduz a carga no PostgreSQL**, que fica dedicado aos dados persistentes.
 
 **Implementação no backend:** 
+```js
+export async function connectToRedis() {
+    redisServer = new RedisMemoryServer();
 
-... ( completar )
+    const host = await redisServer.getHost();
+    const port = await redisServer.getPort();
 
+    redis = new Redis(`redis://${host}:${port}`);
 
+    // ...
+}
+
+// Exemplo: Obter a sessão de um usuário
+export async function getSessao(sessionId) {
+    // Checa se o ID é válido
+    if (typeof sessionId !== 'string' || !FORMATO_ID.test(sessionId))
+        return null;
+
+    const chave = chaveDaSessao(sessionId);
+
+    const [[errGet, dados], [errExpire]] =
+    await redis.pipeline() // Junta vários o get e o expire em uma única mensagem
+               .get(chave) // Obtém os dados
+               .expire(chave, TTL_SESSAO) // Reseta o timer de expiração
+               .exec();
+
+    if (errGet) throw errGet;
+    if (errExpire) throw errExpire;
+
+    return dados ? JSON.parse(dados) : null;
+}
+```
 
 # Como usar
 
