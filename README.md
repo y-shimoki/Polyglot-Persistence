@@ -181,6 +181,8 @@ export async function getSessao(sessionId) {
 
 # Como usar
 
+Assumindo que o Windows esteja sendo utilizado:
+
 ## 1. Tenha o Node.js instalado no seu sistema
 
 Digite o comando abaixo para verificar se o Node.js está instalado:
