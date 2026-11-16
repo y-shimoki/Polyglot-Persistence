@@ -216,7 +216,11 @@ npm install
 
 Esse último comando irá instalar as dependências do projeto.
 
-## 3. Execute o projeto
+## 3. Tenha o arquivo `.env` na raiz do projeto
+
+O arquivo será enviado junto do projeto. Coloque-o na pasta raiz do projeto (`PolyglotPersistence/.env` se você não renomeou a pasta de clonagem acima).
+
+## 4. Execute o projeto
 
 Execute o comando:
 
@@ -225,3 +229,9 @@ npm run start
 ```
 
 Ele irá inicializar o projeto e, após confirmar a conexão com os bancos de dados, irá permitir seu uso através da URL `http://localhost:3000`, que você poderá abrir pelo navegador.
+
+## Extra: acessando a conta de administrador
+
+O nome e senha da conta de administrador estão especificados no arquivo `.env`. Por padrão, eles são:
+- Nome: `admin`
+- Senha: `admin`
