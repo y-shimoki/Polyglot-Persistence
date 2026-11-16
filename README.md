@@ -185,3 +185,13 @@ npm install
 ```
 
 Esse último comando irá instalar as dependências do projeto.
+
+## 3. Execute o projeto
+
+Execute o comando:
+
+```bash
+npm run start
+```
+
+Ele irá inicializar o projeto e, após confirmar a conexão com os bancos de dados, irá permitir seu uso através da URL `http://localhost:3000`, que você poderá abrir pelo navegador.
